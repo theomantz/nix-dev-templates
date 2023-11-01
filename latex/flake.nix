@@ -1,24 +1,46 @@
 {
     description = "A Nix-flake-based LaTeX development environment";
 
-    input.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    outputs = { self, nixpkgs }:
-    let
-        tex = ( pkgs.texlive.combine {
-            inherit ( pkgs.texlive.combine ) scheme-medium
-            dvisvgm dvipng chktex xetex luatex
-            wrapfig amsmath ulem hyperref capt-of geometry;
-        });
-        supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
-        forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems ( system: f {
-            pkgs = import nixpkgs { inherit tex system; };
-        });
-    in
+    inputs.flake-utils.url = "github:numtide/flake-utils";
 
-    devShells = forEachSupportedSystem ({ pkgs }: {
-        default = pkgs.mkShell {
-            packages = with pkgs; [ tex ]
-        }
-    })
+    outputs = { self, nixpkgs, flake-utils }:
+        flake-utils.lib.eachDefaultSystem (system: 
+            let
+                pkgs = import nixpkgs { inherit system; };
+
+                latex-packages = with pkgs; [
+                    (texlive.combine {
+                        inherit (texlive)
+                        scheme-medium
+                        dvisvgm
+                        dvipng
+                        chktex
+                        xetex
+                        luatex
+                        wrapfig
+                        amsmath 
+                        ulem 
+                        hyperref 
+                        capt-of 
+                        geometry;
+                    })
+                    which
+                    python39Packages.pygments
+                ];
+
+                dev-packages = with pkgs; [
+                    texlab
+                    zathura
+                    wmctrl
+                ];
+            in
+            rec {
+                devShells.default = pkgs.mkShell {
+                    buildInputs = [ latex-packages dev-packages ];
+                    packages = latex-packages;
+                };
+            }
+        );
 }
