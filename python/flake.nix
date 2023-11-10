@@ -15,7 +15,6 @@
             let 
                 pkgs = nixpkgs.legacyPackages.${system};
 
-                pythonVersion = "39";
 
                 # shown here: https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/python.section.md
 
@@ -33,8 +32,8 @@
                 # projectDir = self;
                 # packageName = "package-name";
 
-                inherit (poetry2nix.lib.mkPoetry2nix { inherit pkgs; }) mkPoetryApplication;
-
+                inherit (poetry2nix.lib.mkPoetry2Nix { inherit pkgs; }) mkPoetryApplication;
+                pythonVersion = "39";
                 in { 
 
                     packages = {
