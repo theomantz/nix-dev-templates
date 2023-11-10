@@ -31,24 +31,21 @@
                 # ];
 
                 # projectDir = self;
-                packageName = "package-name";
+                # packageName = "package-name";
 
                 inherit (poetry2nix.lib.mkPoetry2nix { inherit pkgs; }) mkPoetryApplication;
 
                 in { 
 
                     packages = {
-                        packageName = mkPoetryApplication {
-                            projectDir = self;
-                            python = pkgs."python${pythonVersion}";
-                        };
-                        default = self.packages.${system}.${packageName};
+                        myapp = mkPoetryApplication { projectDir = self; };
+                        default = self.packages.${system}.myapp;
                     };
 
                     # defaultPackage = self.packages.${system}.${packageName};
 
                     devShells.default = pkgs.mkShell {
-                       inputsFrom = [ self.packages.${system}.${packageName} ];
+                       inputsFrom = [ self.packages.${system}.myapp ];
                        packages = [ pkgs.poetry ];
                     };
                 }
