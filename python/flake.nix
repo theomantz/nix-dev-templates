@@ -15,31 +15,34 @@
             let 
                 pkgs = nixpkgs.legacyPackages.${system};
 
+                pythonVersion = "39";
+
                 # shown here: https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/python.section.md
-                pythonVersion = 39;
 
-                python = pkgs."python${toString pythonVersion}";
+                # overlays = [
+                #     (self: super: {
+                #         poetry2nix = super.poetry2nix.overrideScope' (p2nixself: p2nixsuper: {
+                #             defaultPoetryOverrides = p2nixsuper.defaultPoetryOverrides.extend (pyself: pysuper: {
+                #                 python = python;
+                #                 package = super.package.overridePythonAttrs (oldAttrs: {});
+                #             });
+                #         });
+                #     })
+                # ];
 
-                overlays = [
-                    (self: super: {
-                        poetry2nix = super.poetry2nix.overrideScope' (p2nixself: p2nixsuper: {
-                            defaultPoetryOverrides = p2nixsuper.defaultPoetryOverrides.extend (pyself: pysuper: {
-                                python = python;
-                                package = super.package.overridePythonAttrs (oldAttrs: {});
-                            });
-                        });
-                    })
-                ];
-
-                projectDir = self;
+                # projectDir = self;
                 packageName = "package-name";
+
+                inherit (poetry2nix.lib.mkPoetry2nix { inherit pkgs; }) mkPoetryApplication;
 
                 in { 
 
-                    packages.${packageName} = pkgs.poetry2nix.mkPoetryApplication {
-                        inherit python overlays projectDir;
-                        # non-python dependencies
-                        propogatedBuildInputs = [];
+                    packages = {
+                        packageName = mkPoetryApplication {
+                            projectDir = self;
+                            python = pkgs."python${pythonVersion}";
+                        };
+                        default = self.packages.${system}.${packageName};
                     };
 
                     # defaultPackage = self.packages.${system}.${packageName};
