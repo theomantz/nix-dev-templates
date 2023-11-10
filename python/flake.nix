@@ -31,7 +31,7 @@
                     })
                 ];
 
-                projectDir = ./.;
+                projectDir = self;
                 packageName = "package-name";
 
                 in { 
@@ -44,13 +44,9 @@
 
                     defaultPackage = self.packages.${system}.${packageName};
 
-                    devShell = pkgs.mkShell {
-                        buildInputs = [
-                            (pkgs.poetry2nix.mkPoetryShell {
-                                inherit python projectDir overlays;
-                            })
-                            pkgs."python${toString pythonVersion}Packages".poetry
-                        ];
+                    devShells.default = pkgs.mkShell {
+                       inputsFrom = [ self.packages.${system}.${packageName} ];
+                       packages = [ pkgs.poetry ];
                     };
                 }
         
