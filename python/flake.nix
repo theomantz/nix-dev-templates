@@ -15,18 +15,25 @@
                 pythonVersion = 39;
 
                 python = pkgs."python${toString pythonVersion}";
+
+                overlays = [
+                    (self: super: {
+                        poetry2nix = super.poetry2nix.overrideScope' (p2nixself: p2nixsuper: {
+                            defaultPoetryOverrides = p2nixsuper.defaultPoetryOverrides.extend (pyself: pysuper: {
+                                python = python;
+                                package = super.package.overridePythonAttrs (oldAttrs: {});
+                            });
+                        });
+                    })
+                ];
+
                 projectDir = ./.;
-                overrides = pkgs.poetry2nix.overrides.withDefaults (final: prev: {
-                    # add your overrides here
-                });
-
-
                 packageName = "package-name";
 
                 in { 
 
                     packages.${packageName} = pkgs.poetry2nix.mkPoetryApplication {
-                        inherit python projectDir overrides;
+                        inherit python overlays projectDir;
                         # non-python dependencies
                         propogatedBuildInputs = [];
                     };
@@ -36,7 +43,7 @@
                     devShell = pkgs.mkShell {
                         buildInputs = [
                             (pkgs.poetry2nix.mkPoetryShell {
-                                inherit python projectDir overrides;
+                                inherit python projectDir overlays;
                             })
                             pkgs."python${toString pythonVersion}Packages".poetry
                         ];
