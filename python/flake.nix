@@ -7,7 +7,7 @@
     };
 
     outputs = { self, nixpkgs, flake-utils, ... }:
-        flake-utils.lib.forEachSupportedSystem (system: 
+        flake-utils.lib.eachDefaultSystem (system: 
             let 
                 pkgs = import nixpkgs { inherit system; };
 
@@ -16,7 +16,7 @@
 
                 python = pkgs."python${toString pythonVersion}";
                 projectDir = ./.;
-                overrides = pkgs.poetry2nix.overrides.withDefaults (final: prev {
+                overrides = pkgs.poetry2nix.overrides.withDefaults (final: prev: {
                     # add your overrides here
                 });
 
@@ -25,7 +25,7 @@
 
                 in { 
 
-                    packages.${package-name} = pkgs.poetry2nix.mkPoetryApplication {
+                    packages.${packageName} = pkgs.poetry2nix.mkPoetryApplication {
                         inherit python projectDir overrides;
                         # non-python dependencies
                         propogatedBuildInputs = [];
@@ -41,6 +41,8 @@
                             pkgs."python${toString pythonVersion}Packages".poetry
                         ];
                     };
-        });
+                }
+        
+        );
 
 }
