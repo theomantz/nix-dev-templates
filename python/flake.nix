@@ -13,7 +13,7 @@
     outputs = { self, nixpkgs, flake-utils, poetry2nix, ... }:
         flake-utils.lib.eachDefaultSystem (system: 
             let 
-                pkgs = import nixpkgs { inherit system; };
+                pkgs = nixpkgs.legacyPackages.${system};
 
                 # shown here: https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/python.section.md
                 pythonVersion = 39;
@@ -42,7 +42,7 @@
                         propogatedBuildInputs = [];
                     };
 
-                    defaultPackage = self.packages.${system}.${packageName};
+                    # defaultPackage = self.packages.${system}.${packageName};
 
                     devShells.default = pkgs.mkShell {
                        inputsFrom = [ self.packages.${system}.${packageName} ];
