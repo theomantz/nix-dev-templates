@@ -1,5 +1,6 @@
 {
     description = "A nix-flake for python development using poetry";
+    # doesnt work right now
 
     inputs = {
         nixpkgs = {url = "github:NixOS/nixpkgs/nixos-unstable"; };
