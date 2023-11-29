@@ -1,55 +1,25 @@
 {
-    description = "A nix-flake for python development using poetry";
-    # doesnt work right now
+  description = "a simple flake with python and poetry 2 nix";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
-    inputs = {
-        nixpkgs = {url = "github:NixOS/nixpkgs/nixos-unstable"; };
-        flake-utils = {url = "github:numtide/flake-utils"; };
-        poetry2nix = {
-            url = "github:nix-community/poetry2nix";
-            inputs.nixpkgs.follows = "nixpkgs";
+  outputs = { self, nixpkgs }:
+    let
+      supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
+      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+      pkgs = forAllSystems (system: nixpkgs.legacyPackages.${system});
+    in
+    {
+      packages = forAllSystems (system: {
+        default = pkgs.${system}.poetry2nix.mkPoetryApplication { projectDir = self; };
+      });
+
+      devShells = forAllSystems (system: {
+        default = pkgs.${system}.mkShellNoCC {
+          packages = with pkgs.${system}; [
+            (poetry2nix.mkPoetryEnv { projectDir = self; })
+            poetry
+          ];
         };
+      });
     };
-
-    outputs = { self, nixpkgs, flake-utils, poetry2nix, ... }:
-        flake-utils.lib.eachDefaultSystem (system: 
-            let 
-                pkgs = nixpkgs.legacyPackages.${system};
-
-
-                # shown here: https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/python.section.md
-
-                # overlays = [
-                #     (self: super: {
-                #         poetry2nix = super.poetry2nix.overrideScope' (p2nixself: p2nixsuper: {
-                #             defaultPoetryOverrides = p2nixsuper.defaultPoetryOverrides.extend (pyself: pysuper: {
-                #                 python = python;
-                #                 package = super.package.overridePythonAttrs (oldAttrs: {});
-                #             });
-                #         });
-                #     })
-                # ];
-
-                # projectDir = self;
-                # packageName = "package-name";
-
-                inherit (poetry2nix.lib.mkPoetry2Nix { inherit pkgs; }) mkPoetryApplication;
-                pythonVersion = "39";
-                in { 
-
-                    packages = {
-                        myapp = mkPoetryApplication { projectDir = self; };
-                        default = self.packages.${system}.myapp;
-                    };
-
-                    # defaultPackage = self.packages.${system}.${packageName};
-
-                    devShells.default = pkgs.mkShell {
-                       inputsFrom = [ self.packages.${system}.myapp ];
-                       packages = [ pkgs.poetry ];
-                    };
-                }
-        
-        );
-
 }
